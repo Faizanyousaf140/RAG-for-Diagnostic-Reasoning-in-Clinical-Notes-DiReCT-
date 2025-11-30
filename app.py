@@ -1,3 +1,4 @@
+# 0. Required Libraries For Making App 
 import streamlit as st
 import json
 import numpy as np
@@ -5,30 +6,29 @@ from sentence_transformers import SentenceTransformer
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 
-# ---------------------------------------------------
-# 1. Load models & data (cached)
-# ---------------------------------------------------
+
+# 1. Load models, FAISS index, and documents (cached)
+
 @st.cache_resource
 def load_all():
-    # Import faiss here to avoid Streamlit Cloud import errors
-    import faiss
+    import faiss   # imported here to avoid Streamlit build issues
 
-    # Load your uploaded embedding model from Hugging Face
+    # Embedding model (from Hugging Face)
     embedder = SentenceTransformer("zentom/embedding_model")
 
     # Load FAISS index
     index = faiss.read_index("index.faiss")
 
-    # Load documents (JSONL: newline-delimited JSON)
+    # Load documents (JSONL: one JSON object per line)
     with open("preprocessed_documents.jsonl", "r", encoding="utf-8") as f:
         docs = [json.loads(line) for line in f if line.strip()]
 
-    # Load local generator model (Phi-3 or any model you want)
+    #Generator model Phi-3
     model_name = "microsoft/Phi-3-mini-4k-instruct"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     generator = AutoModelForCausalLM.from_pretrained(
         model_name,
-        torch_dtype=torch.float32,  # CPU-friendly
+        torch_dtype=torch.float32,  
         device_map="auto"
     )
 
@@ -36,22 +36,18 @@ def load_all():
 
 embedder, index, documents, tokenizer, generator = load_all()
 
-# ---------------------------------------------------
-# 2. Retrieval function
-# ---------------------------------------------------
+# 2. Retrieval function to Retrieve top-k most relevant document chunks for the query
 def retrieve(query, k=5):
     q_emb = embedder.encode([query], normalize_embeddings=True)
     scores, idxs = index.search(np.array(q_emb).astype("float32"), k)
     return [documents[i] for i in idxs[0]]
 
-# ---------------------------------------------------
-# 3. Local generator
-# ---------------------------------------------------
+# 3. Generation using Phi-3 Generate a concise clinical answer using context by retrieval
 def generate_answer(question, retrieved_docs):
     context = "\n\n".join([doc["text"] for doc in retrieved_docs])
 
     prompt = f"""
-You are a clinical question answering AI. Use ONLY the context.
+You are a clinical question answering assitant. Use ONLY the context.
 
 --- CONTEXT ---
 {context}
@@ -71,10 +67,8 @@ Answer (short, clinical, factual):
 
     return tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-# ---------------------------------------------------
-# 4. UI
-# ---------------------------------------------------
-st.title("Local Clinical RAG System")
+# 4. UI for Streamlit
+st.title("Clinical RAG System")
 
 query = st.text_input("Ask something:")
 
