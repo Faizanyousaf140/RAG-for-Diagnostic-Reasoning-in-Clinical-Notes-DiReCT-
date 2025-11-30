@@ -233,16 +233,6 @@ It covers:
 
 ---
 
-# 🔗 **LinkedIn Post (Template)**
-
-A short LinkedIn-ready summary is available in:
-
-```
-docs/linkedin_post.md
-```
-
----
-
 # 🤝 **Acknowledgments**
 
 * MIMIC-IV-Ext dataset creators
@@ -257,11 +247,3 @@ docs/linkedin_post.md
 # 📄 **License**
 
 Apache 2.0 License
-
----
-
-If you'd like, I can also:
-✅ Create the **requirements.txt**
-✅ Create **folder structure + starter files**
-✅ Create **app.py**, **rag_pipeline.py**, etc.
-Just tell me **“Generate full project structure”**.
